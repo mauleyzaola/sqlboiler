@@ -584,3 +584,13 @@ func (MySQLDriver) Imports() (col importers.Collection, err error) {
 	}
 	return col, err
 }
+
+func (p *MySQLDriver) ViewColumns(schema, tableName string, whitelist, blacklist []string) ([]drivers.Column, error) {
+	// TODO: implement
+	return nil, nil
+}
+
+func (p *MySQLDriver) ViewNames(schema string, whitelist, blacklist []string) ([]string, error) {
+	// TODO: implement
+	return nil, nil
+}

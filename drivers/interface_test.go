@@ -112,6 +112,16 @@ func (m testMockDriver) UseIndexPlaceholders() bool {
 	return false
 }
 
+func (p testMockDriver) ViewColumns(schema, tableName string, whitelist, blacklist []string) ([]Column, error) {
+	// TODO: implement
+	return nil, nil
+}
+
+func (p testMockDriver) ViewNames(schema string, whitelist, blacklist []string) ([]string, error) {
+	// TODO: implement
+	return nil, nil
+}
+
 func TestTables(t *testing.T) {
 	t.Parallel()
 

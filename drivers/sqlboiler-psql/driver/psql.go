@@ -106,6 +106,24 @@ func (p *PostgresDriver) Assemble(config drivers.Config) (dbinfo *drivers.DBInfo
 		return nil, err
 	}
 
+	dbinfo.Views, err = drivers.Views(p, schema, whitelist, blacklist)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range dbinfo.Views {
+		v := &dbinfo.Views[i]
+		// we need to assume a pk to be treated as table, so the first column will be
+		if len(v.Columns) != 0 {
+			name := v.Columns[0].Name
+			v.PKey = &drivers.PrimaryKey{
+				Name:    name,
+				Columns: []string{name},
+			}
+
+		}
+	}
+
 	return dbinfo, err
 }
 
@@ -141,6 +159,49 @@ func (p *PostgresDriver) TableNames(schema string, whitelist, blacklist []string
 	var names []string
 
 	query := fmt.Sprintf(`select table_name from information_schema.tables where table_schema = $1 and table_type = 'BASE TABLE'`)
+	args := []interface{}{schema}
+	if len(whitelist) > 0 {
+		tables := drivers.TablesFromList(whitelist)
+		if len(tables) > 0 {
+			query += fmt.Sprintf(" and table_name in (%s)", strmangle.Placeholders(true, len(tables), 2, 1))
+			for _, w := range tables {
+				args = append(args, w)
+			}
+		}
+	} else if len(blacklist) > 0 {
+		tables := drivers.TablesFromList(blacklist)
+		if len(tables) > 0 {
+			query += fmt.Sprintf(" and table_name not in (%s)", strmangle.Placeholders(true, len(tables), 2, 1))
+			for _, b := range tables {
+				args = append(args, b)
+			}
+		}
+	}
+
+	query += ` order by table_name;`
+
+	rows, err := p.conn.Query(query, args...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		names = append(names, name)
+	}
+
+	return names, nil
+}
+
+func (p *PostgresDriver) ViewNames(schema string, whitelist, blacklist []string) ([]string, error) {
+	var names []string
+
+	query := fmt.Sprintf(`select table_name from information_schema.tables where table_schema = $1 and table_type = 'VIEW'`)
 	args := []interface{}{schema}
 	if len(whitelist) > 0 {
 		tables := drivers.TablesFromList(whitelist)
@@ -308,6 +369,124 @@ func (p *PostgresDriver) Columns(schema, tableName string, whitelist, blacklist 
 			UDTName:    udtName,
 			Nullable:   nullable,
 			Unique:     unique,
+		}
+		if defaultValue != nil {
+			column.Default = *defaultValue
+		}
+
+		if identity != false {
+			column.Default = "IDENTITY"
+		}
+
+		columns = append(columns, column)
+	}
+
+	return columns, nil
+}
+
+// ViewColumns takes a table name and attempts to retrieve the table information
+// from the database information_schema.columns. It retrieves the column names
+// and column types and returns those as a []Column after TranslateColumnType()
+// converts the SQL types to Go types, for example: "varchar" to "string"
+func (p *PostgresDriver) ViewColumns(schema, tableName string, whitelist, blacklist []string) ([]drivers.Column, error) {
+	var columns []drivers.Column
+	args := []interface{}{schema, tableName}
+
+	query := `
+select
+    c.column_name,
+    ct.column_type,
+    (
+        case when c.character_maximum_length != 0
+                 then
+                 (
+                                 ct.column_type || '(' || c.character_maximum_length || ')'
+                     )
+             else c.udt_name
+            end
+        ) as column_full_type,
+    c.udt_name,
+    e.data_type as array_type,
+    c.domain_name,
+    c.column_default,
+    c.is_nullable = 'YES' as is_nullable,
+    false as is_identity,
+    false as is_unique
+from information_schema.columns as c
+         inner join pg_namespace as pgn on pgn.nspname = c.udt_schema
+         left join pg_type pgt on c.data_type = 'USER-DEFINED' and pgn.oid = pgt.typnamespace and c.udt_name = pgt.typname
+         left join information_schema.element_types e
+                   on ((c.table_catalog, c.table_schema, c.table_name, 'TABLE', c.dtd_identifier)
+                       = (e.object_catalog, e.object_schema, e.object_name, e.object_type, e.collection_type_identifier)),
+     lateral (select
+                  (
+                      case when pgt.typtype = 'e'
+                               then
+                               (
+                                   select 'enum.' || c.udt_name || '(''' || string_agg(labels.label, ''',''') || ''')'
+                                   from (
+                                            select pg_enum.enumlabel as label
+                                            from pg_enum
+                                            where pg_enum.enumtypid =
+                                                  (
+                                                      select typelem
+                                                      from pg_type
+                                                      where pg_type.typtype = 'b' and pg_type.typname = ('_' || c.udt_name)
+                                                      limit 1
+                                                  )
+                                            order by pg_enum.enumsortorder
+                                        ) as labels
+                               )
+                           else c.data_type
+                          end
+                      ) as column_type
+         ) ct
+		where c.table_name = $2 and c.table_schema = $1`
+
+	if len(whitelist) > 0 {
+		cols := drivers.ColumnsFromList(whitelist, tableName)
+		if len(cols) > 0 {
+			query += fmt.Sprintf(" and c.column_name in (%s)", strmangle.Placeholders(true, len(cols), 3, 1))
+			for _, w := range cols {
+				args = append(args, w)
+			}
+		}
+	} else if len(blacklist) > 0 {
+		cols := drivers.ColumnsFromList(blacklist, tableName)
+		if len(cols) > 0 {
+			query += fmt.Sprintf(" and c.column_name not in (%s)", strmangle.Placeholders(true, len(cols), 3, 1))
+			for _, w := range cols {
+				args = append(args, w)
+			}
+		}
+	}
+
+	query += ` order by c.ordinal_position;`
+
+	rows, err := p.conn.Query(query, args...)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var colName, colType, colFullType, udtName string
+		var defaultValue, arrayType, domainName *string
+		var nullable, identity, unique bool
+		if err := rows.Scan(&colName, &colType, &colFullType, &udtName, &arrayType, &domainName, &defaultValue, &nullable, &identity, &unique); err != nil {
+			return nil, errors.Wrapf(err, "unable to scan for table %s", tableName)
+		}
+
+		column := drivers.Column{
+			Name:       colName,
+			DBType:     colType,
+			FullDBType: colFullType,
+			ArrType:    arrayType,
+			DomainName: domainName,
+			UDTName:    udtName,
+			Nullable:   nullable,
+			Unique:     false,
 		}
 		if defaultValue != nil {
 			column.Default = *defaultValue

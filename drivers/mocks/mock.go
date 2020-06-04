@@ -250,3 +250,11 @@ func (m *MockDriver) LeftQuote() byte {
 func (m *MockDriver) UseIndexPlaceholders() bool {
 	return false
 }
+
+func (p *MockDriver) ViewColumns(schema, tableName string, whitelist, blacklist []string) ([]drivers.Column, error){
+	return nil,nil
+}
+
+func (p *MockDriver) ViewNames(schema string, whitelist, blacklist []string) ([]string, error) {
+	return nil,nil
+}
