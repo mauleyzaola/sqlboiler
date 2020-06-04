@@ -9,11 +9,15 @@ require (
 	github.com/ericlagergren/decimal v0.0.0-20181231230500-73749d4874d5
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-sql-driver/mysql v1.5.0
+	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/lib/pq v1.2.1-0.20191011153232-f91d3411e481
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.6.3
+	github.com/volatiletech/null v8.0.0+incompatible // indirect
 	github.com/volatiletech/null/v8 v8.1.0
 	github.com/volatiletech/randomize v0.0.1
+	github.com/volatiletech/sqlboiler v3.7.1+incompatible // indirect
 	github.com/volatiletech/strmangle v0.0.1
+	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
 )

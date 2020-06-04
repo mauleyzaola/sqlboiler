@@ -120,9 +120,13 @@ func (p *PostgresDriver) Assemble(config drivers.Config) (dbinfo *drivers.DBInfo
 				Name:    name,
 				Columns: []string{name},
 			}
-
 		}
+		// this is a workaround, to solve this error from initTemplates func
+		// Error: unable to generate output: failed to execute template: templates/00_struct.go.tpl: template: templates/00_struct.go.tpl:1:22: executing "templates/00_struct.go.tpl" at <.Aliases.Table>: error calling Table: could not find table aliases for: view_videos
+		dbinfo.Tables = append(dbinfo.Tables, *v)
 	}
+	// same workaround as above to treat views as tables
+	dbinfo.Views = nil
 
 	return dbinfo, err
 }

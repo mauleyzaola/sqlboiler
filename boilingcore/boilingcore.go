@@ -400,18 +400,6 @@ func (s *State) initDBInfo(config map[string]interface{}) error {
 		return errors.Wrap(err, "unable to fetch table data")
 	}
 
-	// debug
-	// TODO: no view is being added to the views slice
-	/*
-		for _, v := range s.Tables {
-			log.Println("table: ", v.Name)
-		}
-		for _, v := range s.Views {
-			log.Printf("view: %s v.PKey: %v", v.Name, v.PKey)
-		}
-	*/
-	// debug
-
 	if len(dbInfo.Tables) == 0 {
 		return errors.New("no tables found in database")
 	}

@@ -24,6 +24,7 @@
 // templates/singleton/boil_queries.go.tpl (769B)
 // templates/singleton/boil_table_names.go.tpl (196B)
 // templates/singleton/boil_types.go.tpl (3.028kB)
+// templates/singleton/boil_view_names.go.tpl (187B)
 // templates_test/00_types.go.tpl (173B)
 // templates_test/all.go.tpl (211B)
 // templates_test/delete.go.tpl (7.608kB)
@@ -64,7 +65,7 @@ import (
 func bindataRead(data []byte, name string) ([]byte, error) {
 	gz, err := gzip.NewReader(bytes.NewBuffer(data))
 	if err != nil {
-		return nil, fmt.Errorf("read %q: %v", name, err)
+		return nil, fmt.Errorf("read %q: %w", name, err)
 	}
 
 	var buf bytes.Buffer
@@ -72,7 +73,7 @@ func bindataRead(data []byte, name string) ([]byte, error) {
 	clErr := gz.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("read %q: %v", name, err)
+		return nil, fmt.Errorf("read %q: %w", name, err)
 	}
 	if clErr != nil {
 		return nil, err
@@ -590,6 +591,26 @@ func templatesSingletonBoil_typesGoTpl() (*asset, error) {
 
 	info := bindataFileInfo{name: "templates/singleton/boil_types.go.tpl", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xf5, 0xb1, 0xf1, 0xb6, 0xda, 0x1c, 0xe8, 0x60, 0x98, 0x80, 0x7b, 0x39, 0x12, 0x58, 0x34, 0xc0, 0xc7, 0x46, 0x9, 0xf8, 0x45, 0x81, 0xe4, 0x1f, 0x58, 0x90, 0x89, 0x0, 0xf1, 0x97, 0x6c, 0x44}}
+	return a, nil
+}
+
+var _templatesSingletonBoil_view_namesGoTpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x2a\x4b\x2c\x52\x08\xcb\x4c\x2d\xf7\x4b\xcc\x4d\x2d\x56\xb0\x55\x28\x2e\x29\x2a\x4d\x2e\x51\xa8\xe6\xe2\xac\xae\x2e\x4a\xcc\x4b\x4f\x55\x50\x29\xcb\x4c\x2d\x57\xb0\xb2\x55\xd0\x03\xa9\x2b\x56\xd0\xad\xad\x05\x49\x96\x64\x96\xe4\xa4\x3a\x27\x16\x43\x15\xe8\x81\x0c\xa8\xad\x05\xe9\xcf\xcc\x4b\x07\x29\x48\xcd\x4b\x01\xab\xad\x25\xd7\x2c\x2b\x05\xa5\xea\x6a\x64\x01\x25\x1d\x14\x73\x01\x01\x00\x00\xff\xff\x74\x4b\x0c\x9e\xbb\x00\x00\x00")
+
+func templatesSingletonBoil_view_namesGoTplBytes() ([]byte, error) {
+	return bindataRead(
+		_templatesSingletonBoil_view_namesGoTpl,
+		"templates/singleton/boil_view_names.go.tpl",
+	)
+}
+
+func templatesSingletonBoil_view_namesGoTpl() (*asset, error) {
+	bytes, err := templatesSingletonBoil_view_namesGoTplBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "templates/singleton/boil_view_names.go.tpl", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xf6, 0x54, 0xc0, 0x42, 0x8c, 0xdc, 0x31, 0xeb, 0xf7, 0xa4, 0x4e, 0x8b, 0x13, 0x57, 0x6b, 0x2f, 0x8a, 0x67, 0xce, 0x0, 0x2e, 0x60, 0xf6, 0xa7, 0xcb, 0xbf, 0xa, 0xe0, 0xf1, 0x2a, 0x84, 0x8f}}
 	return a, nil
 }
 
@@ -1128,6 +1149,7 @@ var _bindata = map[string]func() (*asset, error){
 	"templates/singleton/boil_queries.go.tpl":              templatesSingletonBoil_queriesGoTpl,
 	"templates/singleton/boil_table_names.go.tpl":          templatesSingletonBoil_table_namesGoTpl,
 	"templates/singleton/boil_types.go.tpl":                templatesSingletonBoil_typesGoTpl,
+	"templates/singleton/boil_view_names.go.tpl":           templatesSingletonBoil_view_namesGoTpl,
 	"templates_test/00_types.go.tpl":                       templates_test00_typesGoTpl,
 	"templates_test/all.go.tpl":                            templates_testAllGoTpl,
 	"templates_test/delete.go.tpl":                         templates_testDeleteGoTpl,
@@ -1218,6 +1240,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"boil_queries.go.tpl":     &bintree{templatesSingletonBoil_queriesGoTpl, map[string]*bintree{}},
 			"boil_table_names.go.tpl": &bintree{templatesSingletonBoil_table_namesGoTpl, map[string]*bintree{}},
 			"boil_types.go.tpl":       &bintree{templatesSingletonBoil_typesGoTpl, map[string]*bintree{}},
+			"boil_view_names.go.tpl":  &bintree{templatesSingletonBoil_view_namesGoTpl, map[string]*bintree{}},
 		}},
 	}},
 	"templates_test": &bintree{nil, map[string]*bintree{
