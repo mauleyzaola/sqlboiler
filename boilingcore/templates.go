@@ -68,6 +68,9 @@ type templateData struct {
 
 	// StringFuncs are usable in templates with stringMap
 	StringFuncs map[string]func(string) string
+
+	// view implementation
+	Views []drivers.Table
 }
 
 func (t templateData) Quotes(s string) string {

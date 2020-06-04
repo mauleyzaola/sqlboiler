@@ -40,6 +40,9 @@ type DBInfo struct {
 	Schema  string  `json:"schema"`
 	Tables  []Table `json:"tables"`
 	Dialect Dialect `json:"dialect"`
+
+	// view implementation
+	Views []Table `json:"views"`
 }
 
 // Dialect describes the databases requirements in terms of which features
@@ -75,6 +78,10 @@ type Constructor interface {
 
 	// TranslateColumnType takes a Database column type and returns a go column type.
 	TranslateColumnType(Column) Column
+
+	// view implementation
+	ViewNames(schema string, whitelist, blacklist []string) ([]string, error)
+	ViewColumns(schema, tableName string, whitelist, blacklist []string) ([]Column, error)
 }
 
 // Tables returns the metadata for all tables, minus the tables
@@ -126,6 +133,38 @@ func Tables(c Constructor, schema string, whitelist, blacklist []string) ([]Tabl
 	for i := range tables {
 		tbl := &tables[i]
 		setRelationships(tbl, tables)
+	}
+
+	return tables, nil
+}
+
+// Views returns the metadata for all views, minus the tables
+// specified in the blacklist.
+func Views(c Constructor, schema string, whitelist, blacklist []string) ([]Table, error) {
+	var err error
+
+	viewNames, err := c.ViewNames(schema, whitelist, blacklist)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get view names")
+	}
+
+	sort.Strings(viewNames)
+
+	var tables []Table
+	for _, name := range viewNames {
+		t := Table{
+			Name: name,
+		}
+
+		if t.Columns, err = c.ViewColumns(schema, name, whitelist, blacklist); err != nil {
+			return nil, errors.Wrapf(err, "unable to fetch table column info (%s)", name)
+		}
+
+		for i, col := range t.Columns {
+			t.Columns[i] = c.TranslateColumnType(col)
+		}
+
+		tables = append(tables, t)
 	}
 
 	return tables, nil

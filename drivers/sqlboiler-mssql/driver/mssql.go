@@ -557,3 +557,13 @@ func (MSSQLDriver) Imports() (col importers.Collection, err error) {
 	}
 	return col, err
 }
+
+func (p *MSSQLDriver) ViewColumns(schema, tableName string, whitelist, blacklist []string) ([]drivers.Column, error) {
+	// TODO: implement
+	return nil, nil
+}
+
+func (p *MSSQLDriver) ViewNames(schema string, whitelist, blacklist []string) ([]string, error) {
+	// TODO: implement
+	return nil, nil
+}

@@ -46,6 +46,8 @@ type State struct {
 
 	Templates     *templateList
 	TestTemplates *templateList
+
+	Views []drivers.Table
 }
 
 // New creates a new state based off of the config
@@ -64,6 +66,7 @@ func New(config *Config) (*State, error) {
 				Schema       string          `json:"schema"`
 				Dialect      drivers.Dialect `json:"dialect"`
 				Tables       []drivers.Table `json:"tables"`
+				Views        []drivers.Table `json:"views"`
 				Templates    []lazyTemplate  `json:"templates"`
 			}{
 				Config:       s.Config,
@@ -71,6 +74,7 @@ func New(config *Config) (*State, error) {
 				Schema:       s.Schema,
 				Dialect:      s.Dialect,
 				Tables:       s.Tables,
+				Views:        s.Views,
 				Templates:    templates,
 			}
 
@@ -160,6 +164,8 @@ func (s *State) Run() error {
 
 		DBTypes:     make(once),
 		StringFuncs: templateStringMappers,
+
+		Views: s.Views,
 	}
 
 	for _, v := range s.Config.TagIgnore {
@@ -202,6 +208,16 @@ func (s *State) Run() error {
 			if err := generateTestOutput(s, testDirExtMap, data); err != nil {
 				return errors.Wrap(err, "unable to generate test output")
 			}
+		}
+	}
+
+	// TODO: reuse the tables loop instead?
+	for _, view := range s.Views {
+		data.Table = view
+
+		// Generate the regular templates
+		if err := generateOutput(s, regularDirExtMap, data); err != nil {
+			return errors.Wrap(err, "unable to generate output")
 		}
 	}
 
@@ -394,6 +410,7 @@ func (s *State) initDBInfo(config map[string]interface{}) error {
 
 	s.Schema = dbInfo.Schema
 	s.Tables = dbInfo.Tables
+	s.Views = dbInfo.Views
 	s.Dialect = dbInfo.Dialect
 
 	return nil
